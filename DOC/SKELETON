@@ -1,0 +1,6 @@
+send flow:	pidgin call -->fetion_im_send-->fetion_send_message-->send_sip_request
+		-->sendout_pkt--> write to socket
+
+recv flow:	input callback -->process_input-->process_input_messages-->process_incoming_xxx
+		
+

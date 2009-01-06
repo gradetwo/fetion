@@ -1,0 +1,16 @@
+/* method: sip method,such as "R"
+ * url: NULL
+ * to: buddy's uri
+ * addheaders:can put some sip header here
+ * body:msg to send
+ * dialog:a struct has buddy's callid 
+ * tc:callback func when recv 200 response
+ */
+
+void send_sip_request(PurpleConnection *gc, const gchar *method,
+                const gchar *url, const gchar *to, const gchar *addheaders,
+                const gchar *body, struct sip_dialog *dialog, TransCallback tc)
+
+void send_sip_response(PurpleConnection *gc, struct sipmsg *msg, int code,
+                const char *text, const char *body)
+

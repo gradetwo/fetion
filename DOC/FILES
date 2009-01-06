@@ -1,0 +1,12 @@
+fetion.c: entry of whole plugin
+f_login.c: stuff do when login
+f_chat.c: stuff about send && recive msg,invite
+f_group.c:add group,del group,rename group
+f_buddy.c:func about buddy
+f_user.c:set self impresa,get personal info
+f_sysmsg:notify messages
+f_util.c:
+f_portrait.c: download && upload portrait
+sipmsg.c:tools for sip protocl
+f_zone.c: 群组相关
+f_gchat.c: 群聊

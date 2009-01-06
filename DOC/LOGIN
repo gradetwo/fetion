@@ -1,0 +1,7 @@
+1.fetion_login(): init some vars
+2.ParseCfg(): have config goto 4 
+3.RetriveSysCfg():
+4.LoginToSsiPortal():
+5.srvresolved(): connect to msgserver
+6.do_register():
+7.GetPersonalInfo(),GetContactList()

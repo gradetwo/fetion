@@ -1,0 +1,47 @@
+Fetion for Pidgin: just for linux life
+	http://sourceforge.net/projects/fetion/
+Version: 0.98-4 (01/06/2009):
+	*Add status change
+	*Fix register error
+
+
+Version: 0.98-3 (10/30/2008):
+	f_chat.c
+	* Add SendMsgTimeout_cb(include 401 and 504)
+
+Version: 0.98-2 (10/05/2008):
+	f_sysmsg.c
+	* Add logoff when login in other location
+
+Version: 0.98-1 (09/29/2008):
+	fetion.c:
+	* Add nudge cmd
+	* Fix 480 connect error
+
+	f_chat.c:
+	* Fix out of range
+	
+
+Version: 0.98 (07/07/2008):
+	f_login.c:
+	* Change the latency of LoginToSsiPortal (Indeed usefull in bad
+	network )
+	* Reset registerstatus ,avoid reconnected error
+
+Version: 0.97-1 (06/24/2008):
+	f_buddy.c:
+	* Kill memory leek (by moo)
+
+	fetion.c:
+	* kill gcc warnings (by moo)
+	* steal unsupported messsage
+
+
+Version: 0.97 (03/28/2008):
+
+	f_zone.c:
+	* Add for fetion 2008
+	* Can chat in zone
+
+	f_login.c:
+	* Simple the login flow
