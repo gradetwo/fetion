@@ -26,7 +26,7 @@
 #include <glib.h>
 
 struct sipmsg {
-	int response; /* 0 means request, otherwise response code */
+	int response;		/* 0 means request, otherwise response code */
 	gchar *method;
 	gchar *target;
 	GSList *headers;
@@ -39,12 +39,13 @@ struct siphdrelement {
 	gchar *value;
 };
 
-struct sipmsg *sipmsg_parse_msg(const gchar *msg);
-struct sipmsg *sipmsg_parse_header(const gchar *header);
-void sipmsg_add_header(struct sipmsg *msg, const gchar *name, const gchar *value);
+struct sipmsg *sipmsg_parse_msg(const gchar * msg);
+struct sipmsg *sipmsg_parse_header(const gchar * header);
+void sipmsg_add_header(struct sipmsg *msg, const gchar * name,
+		       const gchar * value);
 void sipmsg_free(struct sipmsg *msg);
-const gchar *sipmsg_find_header(struct sipmsg *msg, const gchar *name);
-void sipmsg_remove_header(struct sipmsg *msg, const gchar *name);
+const gchar *sipmsg_find_header(struct sipmsg *msg, const gchar * name);
+void sipmsg_remove_header(struct sipmsg *msg, const gchar * name);
 void sipmsg_print(const struct sipmsg *msg);
 char *sipmsg_to_string(const struct sipmsg *msg);
-#endif /* _PURPLE_FETION_H */
+#endif				/* _PURPLE_FETION_H */

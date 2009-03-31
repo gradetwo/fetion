@@ -46,11 +46,7 @@
 #include "version.h"
 #include "sipmsg.h"
 
-
-
-
-
-#define FETION_BUF_INC 4096 
+#define FETION_BUF_INC 4096
 #define FETION_REGISTER_RETRY_MAX 2
 
 #define FETION_REGISTER_SENT 1
@@ -76,10 +72,10 @@ struct fetion_watcher {
 struct fetion_buddy {
 	gchar *name;
 	gchar *icon_buf;
-	gchar  *icon_crc;
+	gchar *icon_crc;
 	gchar *host;
-	gint  icon_size;
-	gint  icon_rcv_len;
+	gint icon_size;
+	gint icon_rcv_len;
 	gint inpa;
 	struct fetion_account_data *sip;
 
@@ -88,15 +84,15 @@ struct fetion_buddy {
 };
 
 struct fetion_cfg {
-	PurpleProxyConnectData * conn;
-	gchar * buf;
+	PurpleProxyConnectData *conn;
+	gchar *buf;
 	gint size;
 	gint rcv_len;
 	gint inpa;
 };
 
 struct sip_auth {
-	int type; /* 1 = Digest / 2 = NTLM */
+	int type;		/* 1 = Digest / 2 = NTLM */
 	gchar *nonce;
 	gchar *cnonce;
 	gchar *domain;
@@ -109,7 +105,7 @@ struct sip_auth {
 
 struct group_chat {
 	gint chatid;
-	gchar * callid;
+	gchar *callid;
 	gchar *groupname;
 	PurpleConversation *conv;
 };
@@ -131,8 +127,10 @@ struct fetion_account_data {
 	gchar *SsicServer;
 	gchar *SysCfgServer;
 	gchar *UploadServer;
+	gchar *UploadPrefix;
 	gchar *MsgServer;
 	gchar *PortraitServer;
+	gchar *PortraitPrefix;
 	gchar *ServerVersion;
 	gchar *ServiceNoVersion;
 	gchar *ParaVersion;
@@ -147,11 +145,11 @@ struct fetion_account_data {
 	//int SysCfg_inpa;
 	int fd;
 	int cseq;
-	int tg; //for temp group chat id
+	int tg;			//for temp group chat id
 	time_t reregister;
 	time_t republish;
-	int registerstatus; /* 0 nothing, 1 first registration send, 2 auth received, 3 registered */
-	struct fetion_cfg SysCfg; 
+	int registerstatus;	/* 0 nothing, 1 first registration send, 2 auth received, 3 registered */
+	struct fetion_cfg SysCfg;
 	struct sip_auth registrar;
 	struct sip_auth proxy;
 	int listenfd;
@@ -171,7 +169,6 @@ struct fetion_account_data {
 	PurpleCircBuffer *txbuf;
 	guint tx_handler;
 	gchar *regcallid;
-	gint regCseq;
 	GSList *transactions;
 	GSList *watcher;
 	GSList *openconns;
@@ -179,9 +176,9 @@ struct fetion_account_data {
 	struct sockaddr_in serveraddr;
 	int registerexpire;
 	gchar *realhostname;
-	int realport; /* port and hostname from SRV record */
+	int realport;		/* port and hostname from SRV record */
 	PurpleStoredImage *icon;
-	struct fetion_buddy *who; /* log the user we are dowdloading portrait*/
+	struct fetion_buddy *who;	/* log the user we are dowdloading portrait */
 	guint icon_handler;
 	PurpleCircBuffer *icon_buf;
 	guint GetContactTimeOut;
@@ -198,13 +195,14 @@ struct sip_connection {
 
 struct transaction;
 
-typedef gboolean (*TransCallback) (struct fetion_account_data *, struct sipmsg *, struct transaction *);
+typedef gboolean(*TransCallback) (struct fetion_account_data *,
+				  struct sipmsg *, struct transaction *);
 
 struct transaction {
 	time_t time;
 	int timer;
 	int retries;
-	int transport; /* 0 = tcp, 1 = udp */
+	int transport;		/* 0 = tcp, 1 = udp */
 	int fd;
 	const gchar *cseq;
 	struct sipmsg *msg;
@@ -212,19 +210,20 @@ struct transaction {
 	TransCallback callback;
 };
 
-
-
 void fetion_input_cb(gpointer data, gint source, PurpleInputCondition cond);
-gchar *find_tag(const gchar *hdr);
-void send_sip_request(PurpleConnection *gc, const gchar *method,
-		const gchar *url, const gchar *to, const gchar *addheaders,
-		const gchar *body, struct sip_dialog *dialog, TransCallback tc);
+gchar *find_tag(const gchar * hdr);
+void send_sip_request(PurpleConnection * gc, const gchar * method,
+		      const gchar * url, const gchar * to,
+		      const gchar * addheaders, const gchar * body,
+		      struct sip_dialog *dialog, TransCallback tc);
 
-void send_sip_response(PurpleConnection *gc, struct sipmsg *msg, int code,
-		const char *text, const char *body);
-gboolean process_subscribe_response(struct fetion_account_data *sip, struct sipmsg *msg, struct transaction *tc);
-gboolean process_register_response(struct fetion_account_data *sip, struct sipmsg *msg, struct transaction *tc);
+void send_sip_response(PurpleConnection * gc, struct sipmsg *msg, int code,
+		       const char *text, const char *body);
+gboolean process_subscribe_response(struct fetion_account_data *sip,
+				    struct sipmsg *msg, struct transaction *tc);
+gboolean process_register_response(struct fetion_account_data *sip,
+				   struct sipmsg *msg, struct transaction *tc);
 guint fetion_ht_hash_nick(const char *nick);
 gboolean fetion_ht_equals_nick(const char *nick1, const char *nick2);
-void srvresolved( gpointer data);
-#endif /* _PURPLE_FETION_H */
+void srvresolved(gpointer data);
+#endif				/* _PURPLE_FETION_H */

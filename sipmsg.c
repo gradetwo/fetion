@@ -35,12 +35,14 @@
 #include "fetion.h"
 #include "sipmsg.h"
 
-struct sipmsg *sipmsg_parse_msg(const gchar *msg) {
+struct sipmsg *sipmsg_parse_msg(const gchar * msg)
+{
 	const char *tmp = strstr(msg, "\r\n\r\n");
 	char *line;
 	struct sipmsg *smsg;
 
-	if(!tmp) return NULL;
+	if (!tmp)
+		return NULL;
 
 	line = g_strndup(msg, tmp - msg);
 
@@ -51,36 +53,38 @@ struct sipmsg *sipmsg_parse_msg(const gchar *msg) {
 	return smsg;
 }
 
-struct sipmsg *sipmsg_parse_header(const gchar *header) {
-	struct sipmsg *msg = g_new0(struct sipmsg,1);
-	gchar **lines = g_strsplit(header,"\r\n",0);
+struct sipmsg *sipmsg_parse_header(const gchar * header)
+{
+	struct sipmsg *msg = g_new0(struct sipmsg, 1);
+	gchar **lines = g_strsplit(header, "\r\n", 0);
 	gchar **parts;
 	gchar *dummy;
 	gchar *dummy2;
 	gchar *tmp;
 	const gchar *tmp2;
-	int i=1;
-	if(!lines[0]) return NULL;
+	int i = 1;
+	if (!lines[0])
+		return NULL;
 	parts = g_strsplit(lines[0], " ", 3);
-	if(!parts[0] || !parts[1] || !parts[2]) {
+	if (!parts[0] || !parts[1] || !parts[2]) {
 		g_strfreev(parts);
 		g_strfreev(lines);
 		g_free(msg);
 		return NULL;
 	}
-	if(strstr(parts[0],"SIP-C/2.0")) { /* numeric response */
+	if (strstr(parts[0], "SIP-C/2.0")) {	/* numeric response */
 		//fix me
 		msg->method = g_strdup(parts[2]);
-		msg->response = strtol(parts[1],NULL,10);
-	} else { /* request */
+		msg->response = strtol(parts[1], NULL, 10);
+	} else {		/* request */
 		msg->method = g_strdup(parts[0]);
 		msg->target = g_strdup(parts[1]);
 		msg->response = 0;
 	}
 	g_strfreev(parts);
-	for(i=1; lines[i] && strlen(lines[i])>2; i++) {
+	for (i = 1; lines[i] && strlen(lines[i]) > 2; i++) {
 		parts = g_strsplit(lines[i], ": ", 2);
-		if(!parts[0] || !parts[1]) {
+		if (!parts[0] || !parts[1]) {
 			g_strfreev(parts);
 			g_strfreev(lines);
 			g_free(msg);
@@ -88,13 +92,16 @@ struct sipmsg *sipmsg_parse_header(const gchar *header) {
 		}
 		dummy = parts[1];
 		dummy2 = 0;
-		while(*dummy==' ' || *dummy=='\t') dummy++;
+		while (*dummy == ' ' || *dummy == '\t')
+			dummy++;
 		dummy2 = g_strdup(dummy);
-		while(lines[i+1] && (lines[i+1][0]==' ' || lines[i+1][0]=='\t')) {
+		while (lines[i + 1]
+		       && (lines[i + 1][0] == ' ' || lines[i + 1][0] == '\t')) {
 			i++;
 			dummy = lines[i];
-			while(*dummy==' ' || *dummy=='\t') dummy++;
-			tmp = g_strdup_printf("%s %s",dummy2, dummy);
+			while (*dummy == ' ' || *dummy == '\t')
+				dummy++;
+			tmp = g_strdup_printf("%s %s", dummy2, dummy);
 			g_free(dummy2);
 			dummy2 = tmp;
 		}
@@ -103,12 +110,12 @@ struct sipmsg *sipmsg_parse_header(const gchar *header) {
 		g_strfreev(parts);
 	}
 	g_strfreev(lines);
-	tmp2 = sipmsg_find_header(msg, "L");//Content-Length
+	tmp2 = sipmsg_find_header(msg, "L");	//Content-Length
 	if (tmp2 != NULL)
 		msg->bodylen = strtol(tmp2, NULL, 10);
-	if(msg->response) {
-		tmp2 = sipmsg_find_header(msg, "Q");//CSeq
-		if(!tmp2) {
+	if (msg->response) {
+		tmp2 = sipmsg_find_header(msg, "Q");	//CSeq
+		if (!tmp2) {
 			/* SHOULD NOT HAPPEN */
 			msg->method = 0;
 		} else {
@@ -120,37 +127,44 @@ struct sipmsg *sipmsg_parse_header(const gchar *header) {
 	return msg;
 }
 
-void sipmsg_print(const struct sipmsg *msg) {
+void sipmsg_print(const struct sipmsg *msg)
+{
 	GSList *cur;
 	struct siphdrelement *elem;
 	purple_debug(PURPLE_DEBUG_MISC, "fetion", "SIP MSG\n");
-	purple_debug(PURPLE_DEBUG_MISC, "fetion", "response: %d\nmethod: %s\nbodylen: %d\n",msg->response,msg->method,msg->bodylen);
-	if(msg->target) purple_debug(PURPLE_DEBUG_MISC, "fetion", "target: %s\n",msg->target);
+	purple_debug(PURPLE_DEBUG_MISC, "fetion",
+		     "response: %d\nmethod: %s\nbodylen: %d\n", msg->response,
+		     msg->method, msg->bodylen);
+	if (msg->target)
+		purple_debug(PURPLE_DEBUG_MISC, "fetion", "target: %s\n",
+			     msg->target);
 	cur = msg->headers;
-	while(cur) {
+	while (cur) {
 		elem = cur->data;
-		purple_debug(PURPLE_DEBUG_MISC, "fetion", "name: %s value: %s\n",elem->name, elem->value);
+		purple_debug(PURPLE_DEBUG_MISC, "fetion",
+			     "name: %s value: %s\n", elem->name, elem->value);
 		cur = g_slist_next(cur);
 	}
 }
 
-char *sipmsg_to_string(const struct sipmsg *msg) {
+char *sipmsg_to_string(const struct sipmsg *msg)
+{
 	GSList *cur;
 	GString *outstr = g_string_new("");
 	struct siphdrelement *elem;
 
-	if(msg->response)
+	if (msg->response)
 		g_string_append_printf(outstr, "SIP-C/2.0 %d Unknown\r\n",
-			msg->response);
+				       msg->response);
 	else
 		g_string_append_printf(outstr, "%s %s SIP-C/2.0\r\n",
-			msg->method, msg->target);
+				       msg->method, msg->target);
 
 	cur = msg->headers;
-	while(cur) {
+	while (cur) {
 		elem = cur->data;
 		g_string_append_printf(outstr, "%s: %s\r\n", elem->name,
-			elem->value);
+				       elem->value);
 		cur = g_slist_next(cur);
 	}
 
@@ -158,18 +172,22 @@ char *sipmsg_to_string(const struct sipmsg *msg) {
 
 	return g_string_free(outstr, FALSE);
 }
-void sipmsg_add_header(struct sipmsg *msg, const gchar *name, const gchar *value) {
-	struct siphdrelement *element = g_new0(struct siphdrelement,1);
+
+void
+sipmsg_add_header(struct sipmsg *msg, const gchar * name, const gchar * value)
+{
+	struct siphdrelement *element = g_new0(struct siphdrelement, 1);
 	element->name = g_strdup(name);
 	element->value = g_strdup(value);
 	msg->headers = g_slist_append(msg->headers, element);
 }
 
-void sipmsg_free(struct sipmsg *msg) {
+void sipmsg_free(struct sipmsg *msg)
+{
 	struct siphdrelement *elem;
-	while(msg->headers) {
+	while (msg->headers) {
 		elem = msg->headers->data;
-		msg->headers = g_slist_remove(msg->headers,elem);
+		msg->headers = g_slist_remove(msg->headers, elem);
 		g_free(elem->name);
 		g_free(elem->value);
 		g_free(elem);
@@ -180,12 +198,13 @@ void sipmsg_free(struct sipmsg *msg) {
 	g_free(msg);
 }
 
-void sipmsg_remove_header(struct sipmsg *msg, const gchar *name) {
+void sipmsg_remove_header(struct sipmsg *msg, const gchar * name)
+{
 	struct siphdrelement *elem;
 	GSList *tmp = msg->headers;
-	while(tmp) {
+	while (tmp) {
 		elem = tmp->data;
-		if(g_ascii_strcasecmp(elem->name, name)==0) {
+		if (g_ascii_strcasecmp(elem->name, name) == 0) {
 			msg->headers = g_slist_remove(msg->headers, elem);
 			g_free(elem->name);
 			g_free(elem->value);
@@ -197,17 +216,17 @@ void sipmsg_remove_header(struct sipmsg *msg, const gchar *name) {
 	return;
 }
 
-const gchar *sipmsg_find_header(struct sipmsg *msg, const gchar *name) {
+const gchar *sipmsg_find_header(struct sipmsg *msg, const gchar * name)
+{
 	GSList *tmp;
 	struct siphdrelement *elem;
 	tmp = msg->headers;
-	while(tmp) {
+	while (tmp) {
 		elem = tmp->data;
-		if(g_ascii_strcasecmp(elem->name, name)==0) {
+		if (g_ascii_strcasecmp(elem->name, name) == 0) {
 			return elem->value;
 		}
 		tmp = g_slist_next(tmp);
 	}
 	return NULL;
 }
-
