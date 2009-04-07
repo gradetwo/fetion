@@ -37,8 +37,18 @@ LIB_PATHS +=		-L$(GTK_TOP)/lib \
 ##
 ##  SOURCES, OBJECTS
 ##
-C_SRC =			fetion.c \
-			sipmsg.c
+C_SRC =	fetion.c \
+	sipmsg.c \
+	f_buddy.c \
+	f_gchat.c \
+	f_login.c \
+	f_user.c \
+	f_zone.c \
+	f_chat.c \
+	f_group.c \
+	f_portrait.c \
+	f_sysmsg.c \
+	f_util.c
 
 OBJECTS = $(C_SRC:%.c=%.o)
 
