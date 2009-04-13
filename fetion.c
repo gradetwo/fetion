@@ -1428,7 +1428,7 @@ fetion_chat_invite(PurpleConnection * gc, int id, const char *msg,
 	xmlnode_set_attrib(son, "uri", who);
 
 	hdr = g_strdup("N: AddParticipant\r\n");
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug(PURPLE_DEBUG_MISC, "fetion", "in CreateTempGroup[%s]\n",
 		     body);
 	send_sip_request(sip->gc, "S", "", fullto, hdr, body, dialog, NULL);

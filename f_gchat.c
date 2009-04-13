@@ -44,7 +44,7 @@ void CreateTempGroup(PurpleConnection * gc, PurpleBuddy * buddy)
 	xmlnode_set_attrib(son, "uri", buddy->name);
 
 	hdr = g_strdup("N: CreateTemporaryGroup\r\nK: text/html-fragment\r\n");
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug(PURPLE_DEBUG_MISC, "fetion", "in CreateTempGroup[%s]\n",
 		     body);
 	send_sip_request(sip->gc, "S", "", "", hdr, body, NULL,
