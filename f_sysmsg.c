@@ -121,7 +121,7 @@ void process_incoming_BN(struct fetion_account_data *sip, struct sipmsg *msg)
 				    g_strdup_printf("%s--(%s)", nickname,
 						    impresa);
 			else
-				alias = g_strdup_printf(nickname);
+				alias = g_strdup_printf("%s",nickname);
 			if ((b != NULL) && (alias != NULL) && (*alias != '\0'))
 				purple_blist_server_alias_buddy(b, alias);
 

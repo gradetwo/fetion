@@ -292,7 +292,7 @@ AddMobileBuddy(struct fetion_account_data *sip, struct sipmsg *msg,
 	//xmlnode_set_attrib(item,"desc",sip->mobileno);
 	xmlnode_set_attrib(item, "desc", real_name);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug_info("fetion:", "add_buddy:body=[%s]", body);
 
 	send_sip_request(sip->gc, "S", "", "", "N: AddMobileBuddy\r\n", body,
@@ -362,7 +362,7 @@ void GetBuddyInfo(struct fetion_account_data *sip, const char *who)
 
 	xmlnode_set_attrib(item, "uri", who);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug_info("fetion:", "GetBuddyInfo:body=[%s]", body);
 
 	send_sip_request(sip->gc, "S", "", "", "N: GetContactsInfo\r\n", body,
@@ -505,7 +505,7 @@ fetion_add_buddy(PurpleConnection * gc, PurpleBuddy * buddy,
 	xmlnode_set_attrib(item, "buddy-lists", group_id);
 	xmlnode_set_attrib(item, "desc", real_name);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug_info("fetion:", "add_buddy:body=[%s]", body);
 
 	send_sip_request(sip->gc, "S", "", "", "N: AddBuddy\r\n", body, NULL,
@@ -618,7 +618,7 @@ fetion_alias_buddy(PurpleConnection * gc, const gchar * who,
 	xmlnode_set_attrib(item, "uri", who);
 	xmlnode_set_attrib(item, "local-name", alias);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 
 	send_sip_request(sip->gc, "S", "", "", "N: SetBuddyInfo\r\n", body,
 			 NULL, NULL);

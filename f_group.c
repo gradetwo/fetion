@@ -72,7 +72,7 @@ fetion_add_group(PurpleConnection * gc, const gchar * who,
 
 	xmlnode_set_attrib(item, "name", new_group);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 
 	send_sip_request(sip->gc, "S", "", "", "N: CreateBuddyList\r\n", body,
 			 NULL, CreateGroup_cb);
@@ -118,7 +118,7 @@ fetion_change_group(PurpleConnection * gc, const char *who,
 	xmlnode_set_attrib(item, "uri", who);
 	xmlnode_set_attrib(item, "buddy-lists", g_id);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 
 	send_sip_request(sip->gc, "S", "", "", "N: SetBuddyLists\r\n", body,
 			 NULL, NULL);
@@ -157,7 +157,7 @@ void fetion_remove_group(PurpleConnection * gc, PurpleGroup * group)
 	xmlnode_set_attrib(item, "id", g_id);
 	xmlnode_set_attrib(item, "name", group->name);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug_info("fetion:", "add_buddy:body=[%s]", body);
 
 	send_sip_request(sip->gc, "S", "", "", "N: DeleteBuddyList\r\n", body,
@@ -200,7 +200,7 @@ fetion_rename_group(PurpleConnection * gc, const gchar * old_name,
 	xmlnode_set_attrib(item, "id", g_attr->id);
 	xmlnode_set_attrib(item, "name", g_attr->name);
 
-	body = g_strdup_printf(xmlnode_to_str(root, &xml_len));
+	body = g_strdup_printf("%s",xmlnode_to_str(root, &xml_len));
 	purple_debug_info("fetion:", "add_buddy:body=[%s]", body);
 
 	send_sip_request(sip->gc, "S", "", "", "N: SetBuddyListInfo\r\n", body,
