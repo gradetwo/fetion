@@ -309,8 +309,9 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		struct transaction *tc)
 {
 	xmlnode *root, *son, *item;
+	/* Plato Wu,2009/04/16: add mobile no into Buddy Info */
 	const gchar *uri, *name;
-	const gchar *nickname, *gender;
+	const gchar *nickname, *gender, *mobile_no;
 	const gchar *impresa, *birthday;
 	PurpleNotifyUserInfo *user_info;
 
@@ -326,6 +327,7 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 	nickname = xmlnode_get_attrib(item, "nickname");
 	impresa = xmlnode_get_attrib(item, "impresa");
 	gender = xmlnode_get_attrib(item, "gender");
+	mobile_no = xmlnode_get_attrib(item, "mobile-no");
 	purple_debug(PURPLE_DEBUG_MISC, "fetion", "get info \n");
 	user_info = purple_notify_user_info_new();
 	purple_notify_user_info_add_pair(user_info, "昵称", nickname);
@@ -336,6 +338,8 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		purple_notify_user_info_add_pair(user_info, "性别", "男");
 	else
 		purple_notify_user_info_add_pair(user_info, "性别", "女");
+	purple_debug_info("fetion:", "Plato Wu!");
+	purple_notify_user_info_add_pair(user_info, "手机号码", mobile_no);
 	purple_notify_user_info_add_pair(user_info, "心情短语", impresa);
 
 	purple_notify_userinfo(sip->gc, uri, user_info, NULL, NULL);
