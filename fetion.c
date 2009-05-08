@@ -573,6 +573,41 @@ fetion_im_send(PurpleConnection * gc, const char *who, const char *what,
 	g_free(text);
 	return 1;
 }
+static void conversation_created_cb(PurpleConversation *g_conv,
+		                                    struct fetion_account_data * sip)
+{
+	//PurpleAccount *account = purple_conversation_get_account(conv);
+	//PurpleConnection *gc = purple_account_get_connection(account);
+	PurplePresence *presence;
+	PurpleBuddy *b;
+	struct fetion_buddy *buddy = NULL;
+	const gchar *to;
+	to = purple_conversation_get_name(g_conv);
+	buddy = g_hash_table_lookup(sip->buddies, to);
+	if (buddy == NULL) {
+		buddy = g_new0(struct fetion_buddy, 1);
+		buddy->name = g_strdup(to);
+		g_hash_table_insert(sip->buddies, buddy->name, buddy);
+	}
+	if (buddy->dialog == NULL) {
+		buddy->dialog = g_new0(struct sip_dialog, 1);
+		buddy->dialog->callid = g_strdup_printf("%d", -1);
+	}
+
+	if (strcmp(sip->uri, to) != 0) {
+		b = purple_find_buddy(sip->account, to);
+		presence = purple_buddy_get_presence(b);
+		if (!purple_presence_is_status_primitive_active
+				(presence, PURPLE_STATUS_MOBILE)) {
+			if (strncmp(buddy->dialog->callid, "-1", 2) ==
+					0) {
+				g_free(buddy->dialog->callid);
+				buddy->dialog->callid = gencallid();
+				SendInvite(sip, to);
+			}
+		}
+	}
+}
 
 gboolean
 process_register_response(struct fetion_account_data * sip,
@@ -595,6 +630,13 @@ process_register_response(struct fetion_account_data * sip,
 					       (GSourceFunc) GetContactList,
 					       sip);
 			GetContactList(sip);
+			purple_signal_disconnect(purple_conversations_get_handle(),
+					                        "conversation-created", sip,
+								                      PURPLE_CALLBACK(conversation_created_cb)); 
+			/* start watching for new conversations */
+			purple_signal_connect(purple_conversations_get_handle(),
+					                        "conversation-created", sip,
+								                      PURPLE_CALLBACK(conversation_created_cb), sip); 
 		}
 		sip->registerstatus = FETION_REGISTER_COMPLETE;
 		szExpire = sipmsg_find_header(msg, "X");
