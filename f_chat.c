@@ -190,6 +190,7 @@ fetion_send_message(struct fetion_account_data *sip, const gchar * to,
 					g_free(buddy->dialog->callid);
 					buddy->dialog->callid = gencallid();
 					SendInvite(sip, to);
+					sleep(1);
 				}
 				sms_flag = 0;
 			} else {
