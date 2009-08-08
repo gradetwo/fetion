@@ -611,6 +611,8 @@ static void conversation_created_cb(PurpleConversation *g_conv,
 static void conversation_deleting_cb(PurpleConversation *g_conv,
 		                                    struct fetion_account_data * sip)
 {
+	PurplePresence *presence;
+	PurpleBuddy *b;
 	struct fetion_buddy *buddy = NULL;
 	gchar *fullto;
 	const gchar *to;
@@ -626,8 +628,13 @@ static void conversation_deleting_cb(PurpleConversation *g_conv,
 		return;
 
 	if (strcmp(sip->uri, to) != 0) {
+		b = purple_find_buddy(sip->account, to);
+		presence = purple_buddy_get_presence(b);
+		if (!purple_presence_is_status_primitive_active
+				(presence, PURPLE_STATUS_MOBILE)) {
 		send_sip_request(sip->gc, "B", "", fullto, NULL, NULL, buddy->dialog,
 			 NULL);
+		}
 	}
 	free(fullto);
 }
