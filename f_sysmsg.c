@@ -186,6 +186,40 @@ void process_incoming_BN(struct fetion_account_data *sip, struct sipmsg *msg)
 					       _
 					       ("You have signed on from another location."));
 
+	} else if (strncmp(event_type, "ServiceResult", 13) == 0) {
+		for (item = xmlnode_get_child(event_node, "results/contacts/contact"); item; item = xmlnode_get_next_twin(item)) {
+			uri = xmlnode_get_attrib(item, "uri");
+
+			personal = xmlnode_get_child(item, "personal");
+			if (personal == NULL)
+				continue;
+			nickname = xmlnode_get_attrib(personal, "nickname");
+			impresa = xmlnode_get_attrib(personal, "impresa");
+			new_crc = xmlnode_get_attrib(personal, "portrait-crc");
+			b = purple_find_buddy(sip->account, uri);
+			g_return_if_fail(b != NULL);
+			if (nickname == NULL) {
+				nickbuf = g_strdup(b->server_alias);
+				cur = strstr(nickbuf, "--(");
+				if (cur != NULL)
+					*cur = '\0';
+				nickname = g_strdup(nickbuf);
+				g_free(nickbuf);
+			}
+			if (impresa != NULL && *impresa != '\0')
+				alias = g_strdup_printf("%s--(%s)", nickname,
+						    impresa);
+			else
+				alias = g_strdup_printf("%s",nickname);
+			if ((b != NULL) && (alias != NULL) && (*alias != '\0'))
+				purple_blist_server_alias_buddy(b, alias);
+
+			if ((new_crc != NULL) && (strcmp(new_crc, "0") != 0))
+				CheckPortrait(sip, uri, new_crc);
+
+			g_free(alias);
+
+		}
 	}
 
 	xmlnode_free(root);

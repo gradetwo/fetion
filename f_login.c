@@ -533,7 +533,6 @@ void fetion_login(PurpleAccount * account)
 	sip->icon_buf = purple_circ_buffer_new(0);
 	sip->GetContactFlag = 0;
 
-	purple_debug_info("Fetion:", "shit\n");
 	userserver = g_strsplit(username, "@", 2);
 	purple_connection_set_display_name(gc, userserver[0]);
 	if (IsCMccNo(userserver[0])) {
