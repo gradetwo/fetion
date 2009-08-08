@@ -54,12 +54,19 @@ SendInvite_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 {
 	const gchar *to;
 	gchar *fullto;
+	struct fetion_buddy *buddy = NULL;
 
 	to = sipmsg_find_header(msg, "T");
-	fullto = g_strdup_printf("T: %s\r\n", to);
+	if (strncmp("sip:", to, 4) == 0)
+		fullto = g_strdup_printf("T: %s\r\n", to);
+	else
+		return;
+	buddy = g_hash_table_lookup(sip->buddies, to);
+	g_return_if_fail(buddy != NULL);
 
 	purple_debug_info("fetion:", "SendACK:\n");
-	send_sip_request(sip->gc, "A", "", fullto, NULL, NULL, NULL, NULL);
+	sip->cseq=0;//make cseq=1
+	send_sip_request(sip->gc, "A", "", fullto, NULL, NULL, buddy->dialog, NULL);
 
 	g_free(fullto);
 }
@@ -91,6 +98,7 @@ void SendInvite(struct fetion_account_data *sip, const gchar * who)
 			       sip->uri);
 
 	purple_debug_info("fetion:", "SendInvite:[%s]\n", body);
+	sip->cseq=0;//make cseq=1
 	send_sip_request(sip->gc, "I", "", fullto, hdr, body, buddy->dialog,
 			 (TransCallback) SendInvite_cb);
 

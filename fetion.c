@@ -599,14 +599,37 @@ static void conversation_created_cb(PurpleConversation *g_conv,
 		presence = purple_buddy_get_presence(b);
 		if (!purple_presence_is_status_primitive_active
 				(presence, PURPLE_STATUS_MOBILE)) {
-			if (strncmp(buddy->dialog->callid, "-1", 2) ==
-					0) {
+			//if (strncmp(buddy->dialog->callid, "-1", 2) ==
+			//		0) {
 				g_free(buddy->dialog->callid);
 				buddy->dialog->callid = gencallid();
 				SendInvite(sip, to);
-			}
+			//}
 		}
 	}
+}
+static void conversation_deleting_cb(PurpleConversation *g_conv,
+		                                    struct fetion_account_data * sip)
+{
+	struct fetion_buddy *buddy = NULL;
+	gchar *fullto;
+	const gchar *to;
+	to = purple_conversation_get_name(g_conv);
+	buddy = g_hash_table_lookup(sip->buddies, to);
+	if (buddy == NULL) 
+		return;
+	if (buddy->dialog == NULL) 
+		return;
+	if (strncmp("sip:", to, 4) == 0)
+		fullto = g_strdup_printf("T: %s\r\n", to);
+	else
+		return;
+
+	if (strcmp(sip->uri, to) != 0) {
+		send_sip_request(sip->gc, "B", "", fullto, NULL, NULL, buddy->dialog,
+			 NULL);
+	}
+	free(fullto);
 }
 
 gboolean
@@ -633,10 +656,17 @@ process_register_response(struct fetion_account_data * sip,
 			purple_signal_disconnect(purple_conversations_get_handle(),
 					                        "conversation-created", sip,
 								                      PURPLE_CALLBACK(conversation_created_cb)); 
+			purple_signal_disconnect(purple_conversations_get_handle(),
+					                        "deleting-conversation", sip,
+								                      PURPLE_CALLBACK(conversation_deleting_cb)); 
 			/* start watching for new conversations */
 			purple_signal_connect(purple_conversations_get_handle(),
 					                        "conversation-created", sip,
 								                      PURPLE_CALLBACK(conversation_created_cb), sip); 
+			/* start watching for deleting conversations */
+			purple_signal_connect(purple_conversations_get_handle(),
+					                        "deleting-conversation", sip,
+								                      PURPLE_CALLBACK(conversation_deleting_cb), sip); 
 		}
 		sip->registerstatus = FETION_REGISTER_COMPLETE;
 		szExpire = sipmsg_find_header(msg, "X");
