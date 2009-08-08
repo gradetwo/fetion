@@ -24,6 +24,7 @@
 #include "sipmsg.h"
 #include "f_buddy.h"
 
+void GetAllBuddyInfo(struct fetion_account_data *sip);
 gboolean
 GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		  struct transaction *tc)
@@ -163,6 +164,7 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		}
 
 		fetion_subscribe_exp(sip, NULL);
+		GetAllBuddyInfo(sip);
 		//Add youself
 
 		b = purple_find_buddy(sip->account, sip->uri);
@@ -370,6 +372,32 @@ void GetBuddyInfo(struct fetion_account_data *sip, const char *who)
 
 	xmlnode_free(root);
 	g_free(body);
+
+}
+void GetAllBuddyInfo(struct fetion_account_data *sip)
+{
+	gchar body[10240];
+	GSList *buddy_list;
+	memset(body, 0, sizeof(body));
+	g_strlcat(body, "<args><contacts attributes=\"provisioning;impresa;mobile-no;nickname;name;gender;portrait-crc;ivr-enabled\" extended-attributes=\"score-level\">", 10240);
+
+	buddy_list = purple_find_buddies(sip->account, NULL);
+	for (; buddy_list; buddy_list = g_slist_next(buddy_list)) {
+		if ((strncmp (((PurpleBuddy *) buddy_list->data)->name, "sip", 3) == 0) &&
+				(strcmp (((PurpleBuddy *) buddy_list->data)->name, sip->uri) != 0))
+		{
+			g_strlcat(body, "<contact uri=\"", 10240);
+			g_strlcat(body, ((PurpleBuddy *) buddy_list-> data)->name, 10240);
+			g_strlcat(body, "\" />", 10240);
+		} else
+			continue;
+	}
+
+
+	g_strlcat(body, "</contacts></args>", 10240);
+
+	send_sip_request(sip->gc, "S", "", "", "N: GetContactsInfo\r\n", body,
+			 NULL, NULL);
 
 }
 
