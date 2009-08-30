@@ -599,12 +599,9 @@ static void conversation_created_cb(PurpleConversation *g_conv,
 		presence = purple_buddy_get_presence(b);
 		if (!purple_presence_is_status_primitive_active
 				(presence, PURPLE_STATUS_MOBILE)) {
-			//if (strncmp(buddy->dialog->callid, "-1", 2) ==
-			//		0) {
 				g_free(buddy->dialog->callid);
 				buddy->dialog->callid = gencallid();
 				SendInvite(sip, to);
-			//}
 		}
 	}
 }
@@ -1225,6 +1222,12 @@ static void fetion_close(PurpleConnection * gc)
 
 			do_register_exp(sip, 0);
 		}
+		purple_signal_disconnect(purple_conversations_get_handle(),
+					                        "conversation-created", sip,
+								                      PURPLE_CALLBACK(conversation_created_cb)); 
+		purple_signal_disconnect(purple_conversations_get_handle(),
+					                        "deleting-conversation", sip,
+								                      PURPLE_CALLBACK(conversation_deleting_cb)); 
 		connection_free_all(sip);
 		transactions_free_all(sip);
 

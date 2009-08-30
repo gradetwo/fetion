@@ -193,6 +193,8 @@ fetion_send_message(struct fetion_account_data *sip, const gchar * to,
 			presence = purple_buddy_get_presence(b);
 			if (!purple_presence_is_status_primitive_active
 			    (presence, PURPLE_STATUS_MOBILE)) {
+				if (strncmp(buddy->dialog->callid, "-1", 2) ==0)
+						sleep(3);
 				if (strncmp(buddy->dialog->callid, "-1", 2) ==
 				    0) {
 					g_free(buddy->dialog->callid);

@@ -57,7 +57,7 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 
 	g_return_if_fail(who != NULL);
 
-	rcv_len = read(source, buf, 10240);
+	rcv_len = read(source, buf, 10239);
 
 	if (rcv_len > 0) {
 		cur = strstr(buf, "\r\n\r\n");
@@ -67,6 +67,7 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 				if (strncmp(buf, "HTTP/1.1 302 Found\r\n", 20)
 				    != 0) {
 					who->icon_buf = NULL;
+					purple_input_remove(who->inpa);
 					return;
 				}
 				//fixme
@@ -75,11 +76,13 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 					      "/hds/getportrait.aspx");
 
 				if (temp != NULL && strlen(temp) > 7)
+				{
+					purple_input_remove(who->inpa);
 					GetPortrait(sip, who, temp);
-				else {
-					who->icon_buf = NULL;
 					return;
 				}
+				else 
+					who->icon_buf = NULL;
 				purple_debug_info("fetion:",
 						  "DownLoadPortrait ip[%s][%s]\n",
 						  temp, who->name);
@@ -88,7 +91,10 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 			}
 			temp = get_token(buf, "Content-Length: ", "\r\n");
 			if (temp == NULL)
+			{
+				purple_input_remove(who->inpa);
 				return;
+			}
 			content_len = g_strdup(temp);
 			purple_debug_info("fetion:",
 					  "DownLoadPortrait Content-Length%s\n",
@@ -111,7 +117,11 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 			pos = (who->icon_buf) + (who->icon_rcv_len);
 			memcpy(pos, buf, rcv_len);
 			who->icon_rcv_len += rcv_len;
+			if((who->icon_rcv_len)>=(who->icon_size))
+				purple_input_remove(who->inpa);
 		}
+		else
+				purple_input_remove(who->inpa);
 
 		purple_debug_info("fetion:", "DownLoadPortrait%d\n", rcv_len);
 	} else {

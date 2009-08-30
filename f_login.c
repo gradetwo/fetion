@@ -130,7 +130,7 @@ gboolean read_cookie(gpointer sodata, PurpleSslConnection * source, gint con)
 	sip = sodata;
 	purple_debug_info("fetion:", "read cookie\n");
 	gsc = (PurpleSslConnection *) source;
-	rcv_len = purple_ssl_read(gsc, buf, 10240);
+	rcv_len = purple_ssl_read(gsc, buf, 10238);
 	if (rcv_len > 0) {
 		buf[rcv_len] = '\0';
 		purple_debug_info("fetion:", "read_cookie:%s\n", buf);
@@ -342,7 +342,7 @@ void RetriveSysCfg_cb(gpointer sodata, gint source, const gchar * error_message)
 	gint len, rcv_len;
 	xmlnode *root, *son_node, *item;
 	memset(buf, 0, 10240);
-	rcv_len = read(source, buf, 10240);
+	rcv_len = read(source, buf, 10237);
 	if (rcv_len > 0) {
 		if ((cur = strstr(buf, "\r\n\r\n"))) {
 			if (strncmp(buf, "HTTP/1.1 200 OK\r\n", 17) != 0)
