@@ -164,7 +164,8 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		}
 
 		fetion_subscribe_exp(sip, NULL);
-		GetAllBuddyInfo(sip);
+                /* Plato Wu,2010/01/03: It cause crash! */
+//		GetAllBuddyInfo(sip);
 		//Add youself
 
 		b = purple_find_buddy(sip->account, sip->uri);
