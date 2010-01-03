@@ -42,7 +42,6 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		     msg->response);
 	switch (msg->response) {
 	case 200:
-
 		/*Convert the contact from XML to Purple Buddies */
 		isc = xmlnode_from_str(msg->body, len);
 		purple_debug_info("fetion:", "after xmlnode to str\n");
@@ -79,9 +78,13 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 			const gchar *uri, *name;
 			char *buddy_name;
 			const gchar *g_id;
+                        const gchar *relation_status;
+
 			uri = xmlnode_get_attrib(item, "uri");
 			name = xmlnode_get_attrib(item, "local-name");
 			g_id = xmlnode_get_attrib(item, "buddy-lists");
+                        relation_status = xmlnode_get_attrib(item, "relation-status");
+
 
 			buddy_name = g_strdup_printf("%s", uri);
 			if ((g_id == NULL) || (*g_id == '\0')
@@ -108,6 +111,16 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 			purple_blist_add_buddy(b, NULL, g, NULL);
 			if (name != NULL && *name != '\0')
 				purple_blist_alias_buddy(b, name);
+
+                        if(strstr(relation_status, "0"))
+                        {
+                            if (name != NULL && *name != '\0')
+                                purple_blist_alias_buddy(b, g_strconcat(name, "未通过好友请求"));
+                            else
+                                purple_blist_alias_buddy(b, g_strconcat(uri, "未通过好友请求"));
+                        }
+                        
+
 			bs = g_new0(struct fetion_buddy, 1);
 			bs->name = g_strdup(b->name);
 			g_hash_table_insert(sip->buddies, bs->name, bs);
@@ -124,9 +137,13 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 			const gchar *uri, *name;
 			gchar *buddy_name;
 			const gchar *g_id;
+                        const gchar *relation_status;
+
 			uri = xmlnode_get_attrib(item, "uri");
 			name = xmlnode_get_attrib(item, "local-name");
 			g_id = xmlnode_get_attrib(item, "buddy-lists");
+                        relation_status = xmlnode_get_attrib(item, "relation-status");
+
 
 			buddy_name = g_strdup_printf("%s", uri);
 			if ((g_id == NULL) || (*g_id == '\0')
@@ -156,6 +173,16 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 				purple_blist_alias_buddy(b, name);
 			else
 				purple_blist_alias_buddy(b, uri);
+                        
+                        if(strstr(relation_status, "0"))
+                        {
+                            if (name != NULL && *name != '\0')
+                                purple_blist_alias_buddy(b, g_strconcat(name, "未通过好友请求"));
+                            else
+                                purple_blist_alias_buddy(b, g_strconcat(uri, "未通过好友请求"));
+
+                        }
+                        
 			bs = g_new0(struct fetion_buddy, 1);
 			bs->name = g_strdup(b->name);
 			g_hash_table_insert(sip->buddies, bs->name, bs);
@@ -341,7 +368,6 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		purple_notify_user_info_add_pair(user_info, "性别", "男");
 	else
 		purple_notify_user_info_add_pair(user_info, "性别", "女");
-	purple_debug_info("fetion:", "Plato Wu!");
 	purple_notify_user_info_add_pair(user_info, "手机号码", mobile_no);
 	purple_notify_user_info_add_pair(user_info, "心情短语", impresa);
 
