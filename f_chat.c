@@ -224,8 +224,10 @@ fetion_send_message(struct fetion_account_data *sip, const gchar * to,
 	if ((sms_flag == 0) && (self_flag != 1)
 	    && (strncmp("sip:", to, 4) == 0))
 		fullto = g_strdup_printf("T: %s\r\n", to);
-	else
+	else if(sms)
 		fullto = g_strdup_printf("T: %s\r\nN: SendSMS\r\n", to);
+        else
+                fullto = g_strdup_printf("T: %s\r\nN: SendCatSMS\r\n", to);
 
 	purple_debug_info("fetion:sending ", "to:[%s] msg:[%s]\n", to, msg);
 	if (type)
