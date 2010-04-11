@@ -208,7 +208,9 @@ fetion_send_message(struct fetion_account_data *sip, const gchar * to,
 					buddy->dialog->callid =
 					    g_strdup_printf("%d", -1);
 				}
-				sms_flag = 1;
+                                /* Plato Wu,2010/04/08: Modify for cxcxcx */
+//				sms_flag = 1;
+                                sms_flag = 0;
 			}
 
 		} else
