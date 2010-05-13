@@ -74,6 +74,10 @@ struct fetion_buddy {
 	gchar *icon_buf;
 	gchar *icon_crc;
 	gchar *host;
+	// The url (without host) of the portrait returned by the server
+	// Fixme: when to free it
+	gchar *portrait_url;
+
 	gint icon_size;
 	gint icon_rcv_len;
 	gint inpa;

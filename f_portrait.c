@@ -50,6 +50,8 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 	gchar buf[10240];
 	gchar *content_len, *cur, *pos;
 	gchar *temp = NULL;
+
+	gchar *header;
 	gint len, rcv_len;
 	struct fetion_account_data *sip;
 	struct fetion_buddy *who = data;
@@ -57,13 +59,25 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 
 	g_return_if_fail(who != NULL);
 
+	purple_debug_info("fetion:",
+			  "DownLoadPortrait starting...\n");
 	rcv_len = read(source, buf, 10240);
+
+	purple_debug_info("fetion:",
+			  "Received: %d...\n", rcv_len);
 
 	if (rcv_len > 0) {
 		cur = strstr(buf, "\r\n\r\n");
-		if (cur != NULL) {
 
+		if (cur != NULL) {
+			header = g_strndup(buf, cur-buf);
+			purple_debug_info("fetion:",
+					  "Received headr: %s...\n", header);
+			g_free(header);
+
+			// If the stat is not 200
 			if (strncmp(buf, "HTTP/1.1 200 OK\r\n", 17) != 0) {
+				// If the stat is not 302, then assume no portrait is for him
 				if (strncmp(buf, "HTTP/1.1 302 Found\r\n", 20)
 				    != 0) {
 					who->icon_buf = NULL;
@@ -71,8 +85,11 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 				}
 				//fixme
 				temp =
-				    get_token(buf, "Location: HTTP://",
-					      "/hds/getportrait.aspx");
+				    get_token(buf, "Location: http://",
+					      "\r\n");
+
+				purple_debug_info("fetion:",
+				  "new URL: %s...\n", temp);
 
 				if (temp != NULL && strlen(temp) > 7)
 					GetPortrait(sip, who, temp);
@@ -105,7 +122,23 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 			memcpy(who->icon_buf, cur, len);
 			who->icon_rcv_len = len;
 			purple_debug_info("fetion:",
-					  "DownLoadPortrait begin[%s]\n", buf);
+					  "DownLoadPortrait Received Length: %d\n",
+					  len);
+
+			while (who->icon_rcv_len < who->icon_size){
+				rcv_len = read(source, buf, 10240);
+				if (rcv_len<=0)
+					break;
+				memcpy(who->icon_buf+who->icon_rcv_len, buf, rcv_len);
+				who->icon_rcv_len += rcv_len;
+
+				purple_debug_info("fetion:",
+					  "DownLoadPortrait Received Length: %d\n",
+					  rcv_len);
+			}
+
+//			purple_debug_info("fetion:",
+//					  "DownLoadPortrait begin[%s]\n", buf);
 		} else if (who->icon_buf != NULL) {
 
 			pos = (who->icon_buf) + (who->icon_rcv_len);
@@ -113,7 +146,7 @@ void DownLoadPortrait(gpointer data, gint source, const gchar * error_message)
 			who->icon_rcv_len += rcv_len;
 		}
 
-		purple_debug_info("fetion:", "DownLoadPortrait%d\n", rcv_len);
+//		purple_debug_info("fetion:", "DownLoadPortrait%d\n", rcv_len);
 	} else {
 		purple_input_remove(who->inpa);
 
@@ -137,19 +170,29 @@ void GetPortrait_cb(gpointer data, gint source, const gchar * error_message)
 	gint writed_len;
 	if (who->host == NULL)
 		server_ip = g_strdup(sip->PortraitServer);
-	else
+	else{
 		server_ip = g_strdup(who->host);
+	}
 
 	ssic = purple_url_encode(sip->ssic);
 
-	head = g_strdup_printf("GET /%s/getportrait.aspx?%sUri=%s"
-			       "&Size=%s&c=%s HTTP/1.1\r\n"
-			       "User-Agent: IIC2.0/PC 3.3.0370\r\n"
-			       "Accept: image/pjpeg;image/jpeg;image/bmp;image/x-windows-bmp;image/png;image/gif\r\n"
-			       "Host: %s\r\n\r\n",
-			       sip->PortraitPrefix,
-			       (who->host ? "transfer=1&" : ""), who->name,
-			       "96", ssic, server_ip);
+	if (who->host == NULL){
+		head = g_strdup_printf("GET /%s?%sUri=%s"
+					   "&Size=%s&c=%s HTTP/1.1\r\n"
+					   "User-Agent: IIC2.0/PC 3.6.1900\r\n"
+					   "Accept: image/pjpeg;image/jpeg;image/bmp;image/x-windows-bmp;image/png;image/gif\r\n"
+					   "Host: %s\r\n\r\n",
+					   sip->PortraitPrefix,
+					   (who->host ? "transfer=1&" : ""), who->name,
+					   "96", ssic, server_ip);
+	}
+	else {
+		head = g_strdup_printf("GET %s HTTP/1.1\r\n"
+					   "User-Agent: IIC2.0/PC 3.6.1900\r\n"
+					   "Accept: image/pjpeg;image/jpeg;image/bmp;image/x-windows-bmp;image/png;image/gif\r\n"
+					   "Host: %s\r\n\r\n",
+					   who->portrait_url, server_ip);
+	}
 	purple_debug_info("fetion:", "GetPortrait_cb:%s\n", head);
 	who->inpa =
 	    purple_input_add(source, PURPLE_INPUT_READ,
@@ -162,16 +205,18 @@ void GetPortrait_cb(gpointer data, gint source, const gchar * error_message)
 
 void
 GetPortrait(struct fetion_account_data *sip, struct fetion_buddy *buddy,
-	    const gchar * host)
+	    const gchar * fullURL)
 {
 	PurpleProxyConnectData *conn;
 	gchar *server_ip;
 	g_return_if_fail(buddy != NULL);
 	buddy->sip = sip;
-	if (host != NULL) {
-		server_ip = g_strdup(host);
-		buddy->host = g_strdup(host);
-	} else
+	if (fullURL != NULL) {
+		gchar *tp = strchr(fullURL, '/');
+		server_ip = g_strndup(fullURL, tp-fullURL);
+		buddy->host = g_strdup(server_ip);
+		buddy->portrait_url = g_strdup(tp);
+	} else 
 		server_ip = g_strdup(sip->PortraitServer);
 
 	purple_debug_info("fetion:", "GetPortrait:buddy[%s]\n", buddy->name);
