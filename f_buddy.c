@@ -357,7 +357,12 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 	const gchar *uri, *name;
 	const gchar *nickname, *gender, *mobile_no;
 	const gchar *impresa, *birthday;
+
+	/* Chen Xing, 2010/05/08: Update portrait icon when clicked */
+	const gchar *portrait_crc;
+
 	PurpleNotifyUserInfo *user_info;
+
 
 	purple_debug_info("fetion:", "GetBuddyInfo_cb[%s]", msg->body);
 	root = xmlnode_from_str(msg->body, msg->bodylen);
@@ -372,6 +377,13 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 	impresa = xmlnode_get_attrib(item, "impresa");
 	gender = xmlnode_get_attrib(item, "gender");
 	mobile_no = xmlnode_get_attrib(item, "mobile-no");
+
+	portrait_crc = xmlnode_get_attrib(item, "portrait-crc");
+	// Try to update portrait
+//	if ((portrait_crc != NULL) && (strcmp(portrait_crc, "0") != 0))
+//		CheckPortrait(sip, uri, portrait_crc);
+
+
 	purple_debug(PURPLE_DEBUG_MISC, "fetion", "get info \n");
 	user_info = purple_notify_user_info_new();
 	purple_notify_user_info_add_pair(user_info, "昵称", nickname);
@@ -380,8 +392,11 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 	//purple_notify_user_info_add_section_header(user_info, _("General"));
 	if ((gender != NULL) && (gender[0] == '1'))
 		purple_notify_user_info_add_pair(user_info, "性别", "男");
-	else
+	else if ((gender != NULL) && (gender[0] == '2'))
 		purple_notify_user_info_add_pair(user_info, "性别", "女");
+	else
+		purple_notify_user_info_add_pair(user_info, "性别", "未知");
+
 	purple_notify_user_info_add_pair(user_info, "手机号码", mobile_no);
 	purple_notify_user_info_add_pair(user_info, "心情短语", impresa);
 
@@ -397,6 +412,8 @@ void GetBuddyInfo(struct fetion_account_data *sip, const char *who)
 	gint xml_len;
 	xmlnode *root, *son, *item;
 	gchar *body;
+
+//	GetAllBuddyInfo(sip);
 
 	root = xmlnode_new("args");
 	g_return_if_fail(root != NULL);
