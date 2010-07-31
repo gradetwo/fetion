@@ -195,6 +195,7 @@ gboolean Ssi_cb(gpointer sodata, PurpleSslConnection * gsc, gint con)
 	gchar *head;
 	struct fetion_account_data *sip;
 
+	// Modified from codes of open-fetion
 	char noUri[128];
 	char verifyUri[256];
 	char *password;
@@ -205,12 +206,12 @@ gboolean Ssi_cb(gpointer sodata, PurpleSslConnection * gsc, gint con)
 	/*purple_debug_info("Fetion:", "Initialize ssi authentication action\n");*/
 	password = hash_password_v4(NULL , sip->password);
 	/*password = hash_password_v4(sip->userId , sip->password);*/
-	bzero(noUri , sizeof(noUri));
+	memset(noUri, 0, sizeof(noUri));
 	if(sip->mobileno != NULL)
 		sprintf(noUri , "mobileno=%s" , sip->mobileno);
 	else
 		sprintf(noUri , "sid=%s" , sip->username);
-	bzero(verifyUri , sizeof(verifyUri));
+	memset(verifyUri, 0, sizeof(verifyUri));
 	/*if(user->verification != NULL && user->verification->code != NULL)*/
 	/*{*/
 		/*sprintf(verifyUri , "&pid=%s&pic=%s&algorithm=%s"*/
@@ -633,6 +634,7 @@ char* hash_password_v1(const unsigned char* b0 , int b0len , const unsigned char
 	/*free(dst);*/
 	/*res = hextostr(tmp , 20);*/
 	/*return res;*/
+	/* Hash the data in libpurple's way in SHA-1 */
 	context = purple_cipher_context_new_by_name("sha1", NULL);
 	if (context == NULL)
 	{
@@ -640,7 +642,6 @@ char* hash_password_v1(const unsigned char* b0 , int b0len , const unsigned char
 		g_return_val_if_reached(NULL);
 	}
 
-	/* Hash the data */
 	purple_cipher_context_append(context, dst, b0len + psdlen);
 	if (!purple_cipher_context_digest_to_str(context, sizeof(digest), digest, NULL))
 	{
@@ -649,6 +650,7 @@ char* hash_password_v1(const unsigned char* b0 , int b0len , const unsigned char
 	}
 	purple_cipher_context_destroy(context);
 
+	free(dst);
 	return g_strdup(digest);
 }
 /*char* hash_password_v2(const char* userid , const char* passwordhex) */
