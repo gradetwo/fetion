@@ -86,7 +86,7 @@ void do_register_exp(struct fetion_account_data *sip, gint expire)
 	sip->reregister = time(NULL) + expire - 100;
 	body =
 	    g_strdup_printf
-	    (" <args><device type=\"PC\" version=\"0\" client-version=\"3.3.0370\" /><caps value=\"fetion-im;im-session;temp-group\" /><events value=\"contact;permission;system-message\" /><user-info attributes=\"all\" /><presence><basic value=\"400\" desc=\"\" /></presence></args>");
+	    (" <args><device type=\"PC\" version=\"0\" client-version=\"4.0.3340\" /><caps value=\"fetion-im;im-session;temp-group\" /><events value=\"contact;permission;system-message\" /><user-info attributes=\"all\" /><presence><basic value=\"400\" desc=\"\" /></presence></args>");
 
 	if (sip->registerstatus == FETION_REGISTER_COMPLETE) {
 		if (expire == 0)
@@ -187,27 +187,63 @@ gboolean read_cookie(gpointer sodata, PurpleSslConnection * source, gint con)
 	return FALSE;
 }
 
+char* hash_password_v1(const unsigned char* b0 , int b0len , const unsigned char* password , int psdlen);
+char* hash_password_v4(const char* userid , const char* password);
+
 gboolean Ssi_cb(gpointer sodata, PurpleSslConnection * gsc, gint con)
 {
 	gchar *head;
 	struct fetion_account_data *sip;
+
+	char noUri[128];
+	char verifyUri[256];
+	char *password;
+	int passwordType;
+	
 	sip = sodata;
 	purple_debug_info("Fetion:", "Ssi_cb\n");
-	if (sip->mobileno != NULL) {
-		head =
-		    g_strdup_printf
-		    ("GET /ssiportal/SSIAppSignIn.aspx?mobileno=%s&pwd=%s  HTTP/1.1\r\n"
-		     "User-Agent: IIC2.0/pc 3.3.0370\r\n" "Host: %s\r\n"
-		     "Connection: Keep-Alive\r\n\r\n", sip->mobileno,
-		     sip->password, sip->SsicServer);
-	} else {
-		head =
-		    g_strdup_printf
-		    ("GET /ssiportal/SSIAppSignIn.aspx?sid=%s&pwd=%s  HTTP/1.1\r\n"
-		     "User-Agent: IIC2.0/pc 3.3.0370\r\n" "Host: %s\r\n"
-		     "Connection: Keep-Alive\r\n\r\n", sip->username,
-		     sip->password, sip->SsicServer);
-	}
+	/*purple_debug_info("Fetion:", "Initialize ssi authentication action\n");*/
+	password = hash_password_v4(NULL , sip->password);
+	/*password = hash_password_v4(sip->userId , sip->password);*/
+	bzero(noUri , sizeof(noUri));
+	if(sip->mobileno != NULL)
+		sprintf(noUri , "mobileno=%s" , sip->mobileno);
+	else
+		sprintf(noUri , "sid=%s" , sip->username);
+	bzero(verifyUri , sizeof(verifyUri));
+	/*if(user->verification != NULL && user->verification->code != NULL)*/
+	/*{*/
+		/*sprintf(verifyUri , "&pid=%s&pic=%s&algorithm=%s"*/
+						  /*, user->verification->guid*/
+						  /*, user->verification->code*/
+						  /*, user->verification->algorithm);*/
+	/*}*/
+	/*passwordType = (strlen(sip->userId) == 0 ? 1 : 2);*/
+	passwordType = 1;
+
+	head = g_strdup_printf( "GET /ssiportal/SSIAppSignInV4.aspx?%s"
+				    "&domains=fetion.com.cn%s&v4digest-type=%d&v4digest=%s\r\n"
+				    "User-Agent: IIC2.0/pc "PROTO_VERSION"\r\n"
+					"Host: %s\r\n"
+				    "Cache-Control: private\r\n"
+				    "Connection: Keep-Alive\r\n\r\n",
+				    noUri , verifyUri , passwordType , password , "uid.fetion.com.cn");
+
+	/*if (sip->mobileno != NULL) {*/
+		/*head =*/
+			/*g_strdup_printf*/
+			/*("GET /ssiportal/SSIAppSignIn.aspx?mobileno=%s&pwd=%s  HTTP/1.1\r\n"*/
+			 /*"User-Agent: IIC2.0/pc 3.3.0370\r\n" "Host: %s\r\n"*/
+			 /*"Connection: Keep-Alive\r\n\r\n", sip->mobileno,*/
+			 /*sip->password, sip->SsicServer);*/
+	/*} else {*/
+		/*head =*/
+			/*g_strdup_printf*/
+			/*("GET /ssiportal/SSIAppSignIn.aspx?sid=%s&pwd=%s  HTTP/1.1\r\n"*/
+			 /*"User-Agent: IIC2.0/pc 3.3.0370\r\n" "Host: %s\r\n"*/
+			 /*"Connection: Keep-Alive\r\n\r\n", sip->username,*/
+			 /*sip->password, sip->SsicServer);*/
+	/*}*/
 	purple_ssl_write(gsc, head, strlen(head));
 
 	purple_ssl_input_add(gsc, (PurpleSslInputFunction) read_cookie, sip);
@@ -580,4 +616,74 @@ void fetion_login(PurpleAccount * account)
 				 (PurpleProxyConnectFunction) RetriveSysCfg,
 				 sip);
 
+}
+
+char* hash_password_v1(const unsigned char* b0 , int b0len , const unsigned char* password , int psdlen) 
+{
+	unsigned char* dst = (unsigned char*)malloc(b0len + psdlen + 1);
+	PurpleCipherContext *context;
+	static gchar digest[41];
+	memset(dst , 0 , b0len + psdlen + 1);
+	memcpy(dst , b0 , b0len);
+	memcpy(dst + b0len , password , psdlen);
+	/*SHA_CTX ctx;*/
+	/*SHA1_Init(&ctx);*/
+	/*SHA1_Update(&ctx , dst , b0len + psdlen );*/
+	/*SHA1_Final(tmp , &ctx);*/
+	/*free(dst);*/
+	/*res = hextostr(tmp , 20);*/
+	/*return res;*/
+	context = purple_cipher_context_new_by_name("sha1", NULL);
+	if (context == NULL)
+	{
+		purple_debug_error("fetion", "Could not find sha1 cipher\n");
+		g_return_val_if_reached(NULL);
+	}
+
+	/* Hash the data */
+	purple_cipher_context_append(context, dst, b0len + psdlen);
+	if (!purple_cipher_context_digest_to_str(context, sizeof(digest), digest, NULL))
+	{
+		purple_debug_error("fetion", "Failed to get SHA-1 digest.\n");
+		g_return_val_if_reached(NULL);
+	}
+	purple_cipher_context_destroy(context);
+
+	return g_strdup(digest);
+}
+/*char* hash_password_v2(const char* userid , const char* passwordhex) */
+/*{*/
+	/*int id = atoi(userid);*/
+	/*char* res;*/
+	/*unsigned char* bid = (unsigned char*)(&id);*/
+	/*unsigned char ubid[4];*/
+	/*int bpsd_len;*/
+	/*unsigned char* bpsd = strtohex(passwordhex , &bpsd_len);*/
+	/*memcpy(ubid , bid , 4);*/
+	/*res = hash_password_v1(ubid , sizeof(id) , bpsd , bpsd_len);*/
+	/*free(bpsd);*/
+	/*return res;*/
+/*}*/
+char* hash_password_v4(const char* userid , const char* password)
+{
+	const char* domain = "fetion.com.cn:";
+	char *res; // , *dst;
+	unsigned char* udomain = (unsigned char*)malloc(strlen(domain));
+	unsigned char* upassword = (unsigned char*)malloc(strlen(password));
+	memset(udomain , 0 , strlen(domain));
+	memcpy(udomain , (unsigned char*)domain , strlen(domain));
+	memset(upassword , 0 , strlen(password));
+	memcpy(upassword , (unsigned char*)password , strlen(password));
+	res = hash_password_v1(udomain , strlen(domain) , upassword , strlen(password));
+	free(udomain);
+	free(upassword);
+
+		return res;
+	/*if(userid == NULL || strlen(userid) == 0)*/
+	/*{*/
+		/*return res;*/
+	/*}*/
+	/*dst = hash_password_v2(userid , res);*/
+	/*free(res);*/
+	/*return dst;*/
 }

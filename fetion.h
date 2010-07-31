@@ -56,6 +56,8 @@
 #define PUBLISH_EXPIRATION 600
 #define SUBSCRIBE_EXPIRATION 1200
 
+#define PROTO_VERSION "4.0.2510"
+
 struct sip_dialog {
 	gchar *ourtag;
 	gchar *theirtag;
