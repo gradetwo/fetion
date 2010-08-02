@@ -599,9 +599,12 @@ static void conversation_created_cb(PurpleConversation *g_conv,
 		presence = purple_buddy_get_presence(b);
 		if (!purple_presence_is_status_primitive_active
 				(presence, PURPLE_STATUS_MOBILE)) {
+			//if (strncmp(buddy->dialog->callid, "-1", 2) ==
+			//		0) {
 				g_free(buddy->dialog->callid);
 				buddy->dialog->callid = gencallid();
 				SendInvite(sip, to);
+			//}
 		}
 	}
 }

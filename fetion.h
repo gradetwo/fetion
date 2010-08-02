@@ -56,6 +56,8 @@
 #define PUBLISH_EXPIRATION 600
 #define SUBSCRIBE_EXPIRATION 1200
 
+#define PROTO_VERSION "4.0.2510"
+
 struct sip_dialog {
 	gchar *ourtag;
 	gchar *theirtag;
@@ -74,6 +76,10 @@ struct fetion_buddy {
 	gchar *icon_buf;
 	gchar *icon_crc;
 	gchar *host;
+	// The url (without host) of the portrait returned by the server
+	// Fixme: when to free it
+	gchar *portrait_url;
+
 	gint icon_size;
 	gint icon_rcv_len;
 	gint inpa;

@@ -42,7 +42,6 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		     msg->response);
 	switch (msg->response) {
 	case 200:
-
 		/*Convert the contact from XML to Purple Buddies */
 		isc = xmlnode_from_str(msg->body, len);
 		purple_debug_info("fetion:", "after xmlnode to str\n");
@@ -79,9 +78,12 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 			const gchar *uri, *name;
 			char *buddy_name;
 			const gchar *g_id;
+                        const gchar *relation_status;
+
 			uri = xmlnode_get_attrib(item, "uri");
 			name = xmlnode_get_attrib(item, "local-name");
 			g_id = xmlnode_get_attrib(item, "buddy-lists");
+                        relation_status = xmlnode_get_attrib(item, "relation-status");
 
 			buddy_name = g_strdup_printf("%s", uri);
 			if ((g_id == NULL) || (*g_id == '\0')
@@ -108,6 +110,22 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 			purple_blist_add_buddy(b, NULL, g, NULL);
 			if (name != NULL && *name != '\0')
 				purple_blist_alias_buddy(b, name);
+
+                        if(strstr(relation_status, "0"))
+                        {
+                            if (name != NULL && *name != '\0')
+                                purple_blist_alias_buddy(b, g_strconcat(name, "未通过好友请求"));
+                            else
+                                purple_blist_alias_buddy(b, g_strconcat(uri, "未通过好友请求"));
+                        }
+                        if(strstr(relation_status, "2"))
+                        {
+                            if (name != NULL && *name != '\0')
+                                purple_blist_alias_buddy(b, g_strconcat(name, "拒绝好友请求"));
+                            else
+                                purple_blist_alias_buddy(b, g_strconcat(uri, "拒绝好友请求"));
+                        }
+                        purple_debug_info("relation_status:", "%s", relation_status);
 			bs = g_new0(struct fetion_buddy, 1);
 			bs->name = g_strdup(b->name);
 			g_hash_table_insert(sip->buddies, bs->name, bs);
@@ -124,9 +142,14 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 			const gchar *uri, *name;
 			gchar *buddy_name;
 			const gchar *g_id;
+                        const gchar *relation_status;
+
 			uri = xmlnode_get_attrib(item, "uri");
 			name = xmlnode_get_attrib(item, "local-name");
 			g_id = xmlnode_get_attrib(item, "buddy-lists");
+                        relation_status = xmlnode_get_attrib(item, "relation-status");
+                        purple_debug_info("relation_status:", "%s", relation_status);
+                        
 
 			buddy_name = g_strdup_printf("%s", uri);
 			if ((g_id == NULL) || (*g_id == '\0')
@@ -156,6 +179,24 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 				purple_blist_alias_buddy(b, name);
 			else
 				purple_blist_alias_buddy(b, uri);
+                    
+                        if(strstr(relation_status, "0"))
+                        {
+                            if (name != NULL && *name != '\0')
+                                purple_blist_alias_buddy(b, g_strconcat(name, "未通过好友请求"));
+                            else
+                                purple_blist_alias_buddy(b, g_strconcat(uri, "未通过好友请求"));
+
+                        }
+                        if(strstr(relation_status, "2"))
+                        {
+                            if (name != NULL && *name != '\0')
+                                purple_blist_alias_buddy(b, g_strconcat(name, "拒绝好友请求"));
+                            else
+                                purple_blist_alias_buddy(b, g_strconcat(uri, "拒绝好友请求"));
+                        }
+                        purple_debug_info("relation_status:", "%s", relation_status);
+
 			bs = g_new0(struct fetion_buddy, 1);
 			bs->name = g_strdup(b->name);
 			g_hash_table_insert(sip->buddies, bs->name, bs);
@@ -164,7 +205,8 @@ GetContactList_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		}
 
 		fetion_subscribe_exp(sip, NULL);
-		GetAllBuddyInfo(sip);
+                /* Plato Wu,2010/01/03: It cause crash! */
+//		GetAllBuddyInfo(sip);
 		//Add youself
 
 		b = purple_find_buddy(sip->account, sip->uri);
@@ -311,10 +353,16 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 		struct transaction *tc)
 {
 	xmlnode *root, *son, *item;
+	/* Plato Wu,2009/04/16: add mobile no into Buddy Info */
 	const gchar *uri, *name;
-	const gchar *nickname, *gender;
+	const gchar *nickname, *gender, *mobile_no;
 	const gchar *impresa, *birthday;
+
+	/* Chen Xing, 2010/05/08: Update portrait icon when clicked */
+	const gchar *portrait_crc;
+
 	PurpleNotifyUserInfo *user_info;
+
 
 	purple_debug_info("fetion:", "GetBuddyInfo_cb[%s]", msg->body);
 	root = xmlnode_from_str(msg->body, msg->bodylen);
@@ -328,6 +376,14 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 	nickname = xmlnode_get_attrib(item, "nickname");
 	impresa = xmlnode_get_attrib(item, "impresa");
 	gender = xmlnode_get_attrib(item, "gender");
+	mobile_no = xmlnode_get_attrib(item, "mobile-no");
+
+	portrait_crc = xmlnode_get_attrib(item, "portrait-crc");
+	// Try to update portrait
+//	if ((portrait_crc != NULL) && (strcmp(portrait_crc, "0") != 0))
+//		CheckPortrait(sip, uri, portrait_crc);
+
+
 	purple_debug(PURPLE_DEBUG_MISC, "fetion", "get info \n");
 	user_info = purple_notify_user_info_new();
 	purple_notify_user_info_add_pair(user_info, "昵称", nickname);
@@ -336,8 +392,12 @@ GetBuddyInfo_cb(struct fetion_account_data *sip, struct sipmsg *msg,
 	//purple_notify_user_info_add_section_header(user_info, _("General"));
 	if ((gender != NULL) && (gender[0] == '1'))
 		purple_notify_user_info_add_pair(user_info, "性别", "男");
-	else
+	else if ((gender != NULL) && (gender[0] == '2'))
 		purple_notify_user_info_add_pair(user_info, "性别", "女");
+	else
+		purple_notify_user_info_add_pair(user_info, "性别", "未知");
+
+	purple_notify_user_info_add_pair(user_info, "手机号码", mobile_no);
 	purple_notify_user_info_add_pair(user_info, "心情短语", impresa);
 
 	purple_notify_userinfo(sip->gc, uri, user_info, NULL, NULL);
@@ -352,6 +412,8 @@ void GetBuddyInfo(struct fetion_account_data *sip, const char *who)
 	gint xml_len;
 	xmlnode *root, *son, *item;
 	gchar *body;
+
+//	GetAllBuddyInfo(sip);
 
 	root = xmlnode_new("args");
 	g_return_if_fail(root != NULL);
